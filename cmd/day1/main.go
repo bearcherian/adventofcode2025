@@ -1,35 +1,44 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
-	"os"
-	"strconv"
+    "fmt"
+    "os"
+    "strconv"
+    "strings"
 )
 
 func main() {
-    fmt.Println("password: ", processPassword("input"))
+
+    b, err := os.ReadFile("input")
+    if err != nil {
+        fmt.Printf("Error reading file: %v\n", err)
+        return 
+    }
+
+    fmt.Println("password: ", processPassword(string(b)))
 }
 
-func processPassword(inputFile string) int {
-    file, err := os.Open("input")
-    if err != nil {
-        panic(fmt.Sprintf("Error opening file: %v\n", err))
-    }
-    defer file.Close()
-
-    scanner := bufio.NewScanner(file)
+func processPassword(input string) int {
+    lines := strings.Split(input, "\n")
 
     position := 50
     password := 0
-    for scanner.Scan() {
-        line := scanner.Text()
-        
+    for _, line := range lines {
+        if line == "" {
+            continue
+        }
+        fmt.Println(line)
         direction := line[0]
         number, err := strconv.Atoi(line[1:])
         if err != nil {
             fmt.Printf("Error converting number: %v\n", err)
             continue
+        }
+
+        // if the number is larger than 100, we do a full rotation, and count how many rotaions to see how often we pass 0
+        if number > 100 {
+            fullRotation := number / 100
+            password += fullRotation
         }
 
          // if we get a number larger than 100, it's just doing
@@ -47,21 +56,24 @@ func processPassword(inputFile string) int {
             fmt.Printf("Unknown direction: %c\n", direction)
         }
 
+        // at or passed 0, normalize position and increase password
         if position > 99 {
             position = position - 100
-        }
-
-        if position < 0 {
+            password += 1 
+        } else if position < 0 {
             position = 100 + position
-        }
-
-        if position == 0 {
+            // crossing position 0 going left, 
+            // but check that the previous position wasn't 0
+            if position + number != 100 {
+                password += 1
+            }
+        } else if position == 0 {
             password += 1
         }
+
+        fmt.Println("New position: ", position, " password: ", password)
     }
 
-    if err := scanner.Err(); err != nil {
-        fmt.Printf("Error while reading file: %v\n", err)
-    }
+
     return password
 }
