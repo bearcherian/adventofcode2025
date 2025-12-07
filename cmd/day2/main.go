@@ -42,12 +42,45 @@ func gatherInvalidRanges(input string) []int64 {
 
 		for i := start; i <= end; i++ {
 			intStr := strconv.Itoa(i)
-			// fmt.Println("Checking integer: ", intStr, " ", intStr[:len(intStr)/2], ":", intStr[len(intStr)/2:])
-			if len(intStr) % 2 == 0 && intStr[:len(intStr)/2] == intStr[len(intStr)/2:] {
-				invalidRanges = append(invalidRanges, int64(i))
+			strLength := len(intStr)
+
+			for splits := strLength; splits > 0; splits-- {
+
+				intParts := splitStringByN(intStr, splits)
+				if len(intParts) == 0 {
+					continue
+				}
+
+				if len(intParts) > 1 && isAllSameChars(intParts) {
+					invalidRanges = append(invalidRanges, int64(i))
+					break
+				}
 			}
+			
 		}
 	}
 
 	return invalidRanges
+}
+
+func splitStringByN(s string, n int) []string {
+	var parts []string
+	if len(s)%n != 0 {
+		return parts
+	}
+	partsCount := len(s) / n
+	for i := range partsCount {
+		parts = append(parts, s[i*n:(i+1)*n])
+	}
+	return parts
+}
+
+func isAllSameChars(parts []string) bool {
+	first := parts[0]
+	for _, part := range parts[1:] {
+		if part != first {
+			return false
+		}
+	}
+	return true
 }
